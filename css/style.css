@@ -325,6 +325,14 @@ body {
   color: var(--text-muted);
   white-space: nowrap;
 }
+.round-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.player-points {
+  font-size: 0.8rem;
+}
 
 /* Pause button */
 .pause-btn {
@@ -352,37 +360,11 @@ body {
 /* ---------- Seat Positioning ---------- */
 [data-seat] {
   position: absolute;
-  width: clamp(220px, 30vw, 360px);
+  width: clamp(160px, 20vw, 260px);
   z-index: 5;
-}
-
-[data-seat="bottom"] {
-  bottom: 2%;
-  left: 50%;
-  transform: translateX(-50%);
-}
-[data-seat="top"] {
-  top: 2%;
-  left: 50%;
-  transform: translateX(-50%);
-}
-[data-seat="left"] {
-  left: 2%;
-  top: 50%;
-  transform: translateY(-50%);
-}
-[data-seat="right"] {
-  right: 2%;
-  top: 50%;
-  transform: translateY(-50%);
-}
-[data-seat="bot-left"] {
-  bottom: 2%;
-  left: 8%;
-}
-[data-seat="bot-right"] {
-  bottom: 2%;
-  right: 8%;
+  left: var(--seat-x, 50%);
+  top: var(--seat-y, 50%);
+  transform: translate(-50%, -50%) rotate(var(--seat-rotation, 0deg));
 }
 
 /* ---------- Pause Overlay ---------- */
@@ -472,7 +454,7 @@ body {
 /* ---------- Cards ---------- */
 .hand {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0;
   align-items: flex-start;
 }
@@ -589,6 +571,16 @@ body {
   border: 1px solid rgba(229,57,53,0.3);
 }
 .status-bj {
+  color: var(--yellow-21);
+  background: rgba(255,214,0,0.15);
+  border: 1px solid rgba(255,214,0,0.3);
+}
+.status-win {
+  color: var(--green-win);
+  background: rgba(67,160,71,0.15);
+  border: 1px solid rgba(67,160,71,0.3);
+}
+.status-draw {
   color: var(--yellow-21);
   background: rgba(255,214,0,0.15);
   border: 1px solid rgba(255,214,0,0.3);
@@ -832,6 +824,8 @@ body {
     position: static;
     width: 100%;
     transform: none;
+    left: auto;
+    top: auto;
   }
 
   .player-area { padding: 0.5rem 0.6rem; margin-bottom: 0; }

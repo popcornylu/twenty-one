@@ -7,8 +7,11 @@
   const $ = sel => document.querySelector(sel);
   const $$ = sel => document.querySelectorAll(sel);
 
-  let selectedCount = 1;
-  let playerConfigs = [{ type: 'human' }];
+  let selectedCount = 2;
+  let selectedGameMode = 'betting';
+  let selectedRounds = 5;
+  let selectedStartingPoints = 3;
+  let playerConfigs = [{ type: 'human' }, { type: 'computer' }];
 
   /* ============================
      Pause System
@@ -44,7 +47,12 @@
     paused = false;
     $('#pause-overlay').classList.add('hidden');
     pauseResolve = null;
-    Game.initGame(playerConfigs);
+    Game.initGame({
+      playerConfigs,
+      gameMode: selectedGameMode,
+      roundsTarget: selectedRounds,
+      startingPoints: selectedStartingPoints
+    });
     startNewRound();
   }
 
@@ -108,7 +116,7 @@
     });
   }
 
-  // Player count toggle (1-6)
+  // Player count toggle (2-6)
   $$('#player-count-group .toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       $$('#player-count-group .toggle-btn').forEach(b => b.classList.remove('active'));
@@ -118,12 +126,50 @@
     });
   });
 
+  // Game mode toggle
+  $$('#game-mode-group .toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('#game-mode-group .toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedGameMode = btn.dataset.mode;
+      const section = $('#starting-points-section');
+      if (selectedGameMode === 'points') {
+        section.classList.remove('hidden');
+      } else {
+        section.classList.add('hidden');
+      }
+    });
+  });
+
+  // Round count toggle
+  $$('#round-count-group .toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('#round-count-group .toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedRounds = parseInt(btn.dataset.rounds);
+    });
+  });
+
+  // Starting points toggle
+  $$('#starting-points-group .toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('#starting-points-group .toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedStartingPoints = parseInt(btn.dataset.points);
+    });
+  });
+
   // Initial build
   buildPlayerConfigUI();
 
   // Start game
   $('#start-btn').addEventListener('click', () => {
-    Game.initGame(playerConfigs);
+    Game.initGame({
+      playerConfigs,
+      gameMode: selectedGameMode,
+      roundsTarget: selectedRounds,
+      startingPoints: selectedStartingPoints
+    });
     startNewRound();
   });
 
@@ -137,27 +183,32 @@
 
     UI.showScreen('game-screen');
 
-    // Computer players bet immediately
-    for (const p of state.players) {
-      if (p.isDealer || p.chips <= 0 || p.isHuman) continue;
-      p.currentBet = AI.generateBet(p.chips);
+    if (state.gameMode === 'betting') {
+      // Computer players bet immediately
+      for (const p of state.players) {
+        if (p.isDealer || p.chips <= 0 || p.isHuman) continue;
+        p.currentBet = AI.generateBet(p.chips);
+      }
+
+      UI.renderGameScreen();
+
+      // All human players bet simultaneously
+      const humanBetPromises = [];
+      for (let i = 0; i < state.players.length; i++) {
+        const p = state.players[i];
+        if (p.isDealer || p.chips <= 0 || !p.isHuman) continue;
+        humanBetPromises.push(humanBet(i));
+      }
+
+      if (humanBetPromises.length > 0) {
+        await Promise.all(humanBetPromises);
+      }
+
+      state.currentBettingIndex = -1;
+    } else {
+      UI.renderGameScreen();
     }
 
-    UI.renderGameScreen();
-
-    // All human players bet simultaneously
-    const humanBetPromises = [];
-    for (let i = 0; i < state.players.length; i++) {
-      const p = state.players[i];
-      if (p.isDealer || p.chips <= 0 || !p.isHuman) continue;
-      humanBetPromises.push(humanBet(i));
-    }
-
-    if (humanBetPromises.length > 0) {
-      await Promise.all(humanBetPromises);
-    }
-
-    state.currentBettingIndex = -1;
     startDealing();
   }
 
@@ -225,7 +276,7 @@
     for (let round = 0; round < 2; round++) {
       for (let i = 0; i < state.players.length; i++) {
         const p = state.players[i];
-        if (p.chips <= 0 && !p.isDealer) continue;
+        if (state.gameMode === 'betting' && p.chips <= 0 && !p.isDealer) continue;
         await waitIfPaused(); // Pause point 3: before each card deal
         const faceUp = !(p.isDealer && round === 1);
         p.hand.push(Game.drawCard(faceUp));
@@ -238,7 +289,7 @@
     // Check for natural blackjacks (non-dealer)
     for (let i = 0; i < state.players.length; i++) {
       if (i === state.dealerIndex) continue;
-      if (state.players[i].chips <= 0) continue;
+      if (state.gameMode === 'betting' && state.players[i].chips <= 0) continue;
       Game.checkNaturalBlackjack(state.players[i]);
     }
 

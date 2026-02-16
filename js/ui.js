@@ -8,18 +8,43 @@ const UI = (() => {
 
   /* ---------- seat assignment ---------- */
 
-  const SEAT_MAP = {
-    1: ['bottom'],
-    2: ['bottom', 'top'],
-    3: ['bottom', 'left', 'top'],
-    4: ['bottom', 'left', 'top', 'right'],
-    5: ['bottom', 'bot-left', 'left', 'top', 'right'],
-    6: ['bottom', 'bot-left', 'left', 'top', 'right', 'bot-right']
+  const SEAT_LAYOUTS = {
+    2: [
+      { x: 50, y: 82, r: 0 },     // bottom-center
+      { x: 50, y: 15, r: 180 },   // top-center
+    ],
+    3: [
+      { x: 50, y: 82, r: 0 },     // bottom-center
+      { x: 78, y: 50, r: -90 },   // right-center
+      { x: 50, y: 15, r: 180 },   // top-center
+    ],
+    4: [
+      { x: 50, y: 82, r: 0 },     // bottom-center
+      { x: 78, y: 50, r: -90 },   // right-center
+      { x: 50, y: 15, r: 180 },   // top-center
+      { x: 22, y: 50, r: 90 },    // left-center
+    ],
+    5: [
+      { x: 35, y: 82, r: 0 },     // bottom@35%
+      { x: 65, y: 82, r: 0 },     // bottom@65%
+      { x: 78, y: 50, r: -90 },   // right-center
+      { x: 50, y: 15, r: 180 },   // top-center
+      { x: 22, y: 50, r: 90 },    // left-center
+    ],
+    6: [
+      { x: 35, y: 82, r: 0 },     // bottom@35%
+      { x: 65, y: 82, r: 0 },     // bottom@65%
+      { x: 78, y: 50, r: -90 },   // right-center
+      { x: 65, y: 15, r: 180 },   // top@65%
+      { x: 35, y: 15, r: 180 },   // top@35%
+      { x: 22, y: 50, r: 90 },    // left-center
+    ],
   };
 
-  function getSeatForPlayer(playerIndex, totalActivePlayers) {
-    const seats = SEAT_MAP[totalActivePlayers] || SEAT_MAP[6];
-    return seats[playerIndex] || 'bottom';
+  function getSeatPosition(seatIndex, totalPlayers) {
+    const clamped = Math.max(2, Math.min(6, totalPlayers));
+    const layout = SEAT_LAYOUTS[clamped];
+    return layout[seatIndex] || layout[0];
   }
 
   function showScreen(id) {
@@ -91,8 +116,38 @@ const UI = (() => {
   /* ---------- player status badge ---------- */
 
   function statusBadge(player) {
-    if (player.status === 'bust') return '<span class="status-badge status-lose">Lose</span>';
-    if (player.status === 'blackjack') return '<span class="status-badge status-bj">Blackjack!</span>';
+    const state = Game.state;
+
+    // During results phase, show result badge with score/chip change
+    if (state && state.phase === 'results' && player.result && !player.isDealer) {
+      if (player.result === 'win') {
+        let change;
+        if (state.gameMode === 'betting') {
+          const payout = player.status === 'blackjack'
+            ? Math.floor(player.currentBet * 1.5)
+            : player.currentBet;
+          change = '+' + payout;
+        } else {
+          change = '+1';
+        }
+        return '<span class="status-badge status-win">Win! ' + change + '</span>';
+      } else if (player.result === 'lose') {
+        let change;
+        if (state.gameMode === 'betting') {
+          change = '-' + player.currentBet;
+        } else {
+          change = '-1';
+        }
+        return '<span class="status-badge status-lose">' +
+          (player.status === 'bust' ? '爆牌 ' : 'Lose! ') + change + '</span>';
+      } else {
+        let change = state.gameMode === 'points' ? ' +0.5' : '';
+        return '<span class="status-badge status-draw">Draw!' + change + '</span>';
+      }
+    }
+
+    if (player.status === 'bust') return '<span class="status-badge status-lose">爆牌</span>';
+    if (player.status === 'blackjack') return '<span class="status-badge status-bj">二十一點!</span>';
     return '';
   }
 
@@ -119,6 +174,11 @@ const UI = (() => {
 
     if (deckCountEl) {
       deckCountEl.textContent = '牌堆: ' + state.deck.length;
+    }
+
+    const roundCountEl = area.querySelector('.round-count');
+    if (roundCountEl) {
+      roundCountEl.textContent = '回合: ' + state.round + '/' + state.roundsTarget;
     }
 
     handEl.innerHTML = '';
@@ -159,7 +219,7 @@ const UI = (() => {
     for (let i = 0; i < state.players.length; i++) {
       const p = state.players[i];
       if (p.isDealer) continue;
-      if (p.chips <= 0 && p.hand.length === 0) continue;
+      if (state.gameMode === 'betting' && p.chips <= 0 && p.hand.length === 0) continue;
       activePlayers.push(i);
     }
 
@@ -170,7 +230,11 @@ const UI = (() => {
       const div = document.createElement('div');
       div.className = 'player-area';
       div.dataset.playerIndex = i;
-      div.dataset.seat = getSeatForPlayer(seatIdx, activePlayers.length);
+      div.dataset.seat = 'player';
+      const seat = getSeatPosition(seatIdx, activePlayers.length);
+      div.style.setProperty('--seat-x', seat.x + '%');
+      div.style.setProperty('--seat-y', seat.y + '%');
+      div.style.setProperty('--seat-rotation', seat.r + 'deg');
 
       if (p.isHuman) {
         div.classList.add('human-player-area');
@@ -182,25 +246,31 @@ const UI = (() => {
       if (state.phase === 'playerTurn' && state.currentPlayerIndex === i) {
         div.classList.add('active-player');
       }
-      if (state.phase === 'betting' && p.isHuman && p.currentBet === 0 && p.chips > 0) {
+      if (state.gameMode === 'betting' && state.phase === 'betting' && p.isHuman && p.currentBet === 0 && p.chips > 0) {
         div.classList.add('active-player');
       }
 
       // Player info + meta
+      let metaHtml;
+      if (state.gameMode === 'betting') {
+        metaHtml =
+          '<span class="player-chips">\uD83C\uDFB0 ' + p.chips + '</span>' +
+          '<span class="player-bet">下注: ' + p.currentBet + '</span>';
+      } else {
+        metaHtml = '<span class="player-points">\uD83D\uDCCA 分數: ' + p.score + '</span>';
+      }
+
       let html =
         '<div class="player-info">' +
           '<span class="player-name">' + p.name + '</span>' +
           scoreHTML(p, true) +
           ' ' + statusBadge(p) +
         '</div>' +
-        '<div class="player-meta">' +
-          '<span class="player-chips">\uD83C\uDFB0 ' + p.chips + '</span>' +
-          '<span class="player-bet">下注: ' + p.currentBet + '</span>' +
-        '</div>' +
+        '<div class="player-meta">' + metaHtml + '</div>' +
         '<div class="hand"></div>';
 
       // Inline betting UI (human, betting phase, not yet confirmed)
-      if (state.phase === 'betting' && p.isHuman && p.currentBet === 0 && p.chips > 0) {
+      if (state.gameMode === 'betting' && state.phase === 'betting' && p.isHuman && p.currentBet === 0 && p.chips > 0) {
         html +=
           '<div class="inline-betting">' +
             '<div class="inline-bet-display">下注: <span class="inline-bet-value">0</span></div>' +
@@ -223,31 +293,6 @@ const UI = (() => {
           '<div class="inline-actions">' +
             '<button class="action-btn hit-btn inline-hit-btn">要牌</button>' +
             '<button class="action-btn stand-btn inline-stand-btn">停牌</button>' +
-          '</div>';
-      }
-
-      // Inline result display
-      if (state.phase === 'results' && p.result) {
-        let resultCls, resultText, chipsHtml = '';
-        if (p.result === 'win') {
-          resultCls = 'inline-result-win';
-          resultText = 'Win!';
-          const payout = p.status === 'blackjack'
-            ? Math.floor(p.currentBet * 1.5)
-            : p.currentBet;
-          chipsHtml = ' <span class="inline-result-chips inline-result-win">+' + payout + '</span>';
-        } else if (p.result === 'lose') {
-          resultCls = 'inline-result-lose';
-          resultText = 'Lose!';
-          chipsHtml = ' <span class="inline-result-chips inline-result-lose">-' + p.currentBet + '</span>';
-        } else {
-          resultCls = 'inline-result-draw';
-          resultText = 'Draw!';
-        }
-        html +=
-          '<div class="inline-result">' +
-            '<span class="inline-result-text ' + resultCls + '">' + resultText + '</span>' +
-            chipsHtml +
           '</div>';
       }
 

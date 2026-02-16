@@ -17,8 +17,7 @@
       <div class="setup-section">
         <label class="section-label">玩家人數</label>
         <div class="toggle-group" id="player-count-group">
-          <button class="toggle-btn active" data-count="1">1</button>
-          <button class="toggle-btn" data-count="2">2</button>
+          <button class="toggle-btn active" data-count="2">2</button>
           <button class="toggle-btn" data-count="3">3</button>
           <button class="toggle-btn" data-count="4">4</button>
           <button class="toggle-btn" data-count="5">5</button>
@@ -29,6 +28,34 @@
       <div class="setup-section" id="player-config-section">
         <label class="section-label">玩家設定</label>
         <div id="player-config-list"></div>
+      </div>
+
+      <div class="setup-section">
+        <label class="section-label">遊戲模式</label>
+        <div class="toggle-group" id="game-mode-group">
+          <button class="toggle-btn active" data-mode="betting">下注模式</button>
+          <button class="toggle-btn" data-mode="points">點數模式</button>
+        </div>
+      </div>
+
+      <div class="setup-section">
+        <label class="section-label">回合數</label>
+        <div class="toggle-group" id="round-count-group">
+          <button class="toggle-btn active" data-rounds="5">5</button>
+          <button class="toggle-btn" data-rounds="10">10</button>
+          <button class="toggle-btn" data-rounds="15">15</button>
+        </div>
+      </div>
+
+      <div class="setup-section hidden" id="starting-points-section">
+        <label class="section-label">起始分數</label>
+        <div class="toggle-group" id="starting-points-group">
+          <button class="toggle-btn" data-points="1">1</button>
+          <button class="toggle-btn" data-points="2">2</button>
+          <button class="toggle-btn active" data-points="3">3</button>
+          <button class="toggle-btn" data-points="4">4</button>
+          <button class="toggle-btn" data-points="5">5</button>
+        </div>
       </div>
 
       <button id="start-btn" class="primary-btn">開始遊戲</button>
@@ -45,6 +72,7 @@
             <span class="player-score"></span>
           </div>
           <span class="deck-count"></span>
+          <span class="round-count"></span>
           <button id="pause-btn" class="pause-btn" title="暫停">⏸</button>
         </div>
         <div class="hand"></div>

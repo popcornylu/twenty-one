@@ -70,18 +70,19 @@ const Game = (() => {
   }
 
   /**
-   * initGame(playerConfigs)
-   * playerConfigs: [{type:'human'}, {type:'computer'}, ...]
+   * initGame(config)
+   * config: { playerConfigs, gameMode, roundsTarget, startingPoints }
    * P1-P6 created in order, dealer always last index.
    */
-  function initGame(playerConfigs) {
+  function initGame(config) {
+    const { playerConfigs, gameMode, roundsTarget, startingPoints } = config;
     const deck = shuffleDeck(createDeck());
     const players = [];
     const humanIndices = [];
 
     for (let i = 0; i < playerConfigs.length; i++) {
-      const config = playerConfigs[i];
-      const isHuman = config.type === 'human';
+      const cfg = playerConfigs[i];
+      const isHuman = cfg.type === 'human';
       const name = isHuman ? '玩家 ' + (i + 1) : '電腦 ' + (i + 1);
       if (isHuman) humanIndices.push(i);
       players.push({
@@ -89,7 +90,8 @@ const Game = (() => {
         isHuman,
         isDealer: false,
         hand: [],
-        chips: 1000,
+        chips: gameMode === 'betting' ? 1000 : 0,
+        score: gameMode === 'points' ? startingPoints : 0,
         currentBet: 0,
         status: 'playing',
         result: null
@@ -102,7 +104,8 @@ const Game = (() => {
       isHuman: false,
       isDealer: true,
       hand: [],
-      chips: 1000,
+      chips: gameMode === 'betting' ? 1000 : 0,
+      score: 0,
       currentBet: 0,
       status: 'playing',
       result: null
@@ -116,7 +119,10 @@ const Game = (() => {
       humanIndices,
       currentPlayerIndex: -1,
       currentBettingIndex: -1,
-      round: 0
+      round: 0,
+      gameMode,
+      roundsTarget,
+      startingPoints
     };
 
     return state;
@@ -124,7 +130,7 @@ const Game = (() => {
 
   function startRound() {
     state.round++;
-    state.phase = 'betting';
+    state.phase = state.gameMode === 'betting' ? 'betting' : 'dealing';
     for (const player of state.players) {
       player.hand = [];
       player.currentBet = 0;
@@ -140,7 +146,7 @@ const Game = (() => {
     state.phase = 'dealing';
     for (let round = 0; round < 2; round++) {
       for (let i = 0; i < state.players.length; i++) {
-        if (state.players[i].chips <= 0 && !state.players[i].isDealer) continue;
+        if (state.gameMode === 'betting' && state.players[i].chips <= 0 && !state.players[i].isDealer) continue;
         const isDealer = state.players[i].isDealer;
         const faceUp = !(isDealer && round === 1);
         state.players[i].hand.push(drawCard(faceUp));
@@ -197,7 +203,7 @@ const Game = (() => {
 
     for (const player of state.players) {
       if (player.isDealer) continue;
-      if (player.chips <= 0 && player.hand.length === 0) continue;
+      if (state.gameMode === 'betting' && player.chips <= 0 && player.hand.length === 0) continue;
 
       const playerScore = calculateScore(player.hand);
 
@@ -218,18 +224,28 @@ const Game = (() => {
       }
     }
 
-    // Update chips
+    // Update chips/score
     for (const player of state.players) {
       if (player.isDealer) continue;
-      if (player.result === 'win') {
-        const payout = player.status === 'blackjack'
-          ? Math.floor(player.currentBet * 1.5)
-          : player.currentBet;
-        player.chips += payout;
-        dealer.chips -= payout;
-      } else if (player.result === 'lose') {
-        player.chips -= player.currentBet;
-        dealer.chips += player.currentBet;
+      if (state.gameMode === 'betting') {
+        if (player.result === 'win') {
+          const payout = player.status === 'blackjack'
+            ? Math.floor(player.currentBet * 1.5)
+            : player.currentBet;
+          player.chips += payout;
+          dealer.chips -= payout;
+        } else if (player.result === 'lose') {
+          player.chips -= player.currentBet;
+          dealer.chips += player.currentBet;
+        }
+      } else {
+        if (player.result === 'win') {
+          player.score += 1;
+        } else if (player.result === 'lose') {
+          player.score -= 1;
+        } else if (player.result === 'draw') {
+          player.score += 0.5;
+        }
       }
     }
 
@@ -240,7 +256,7 @@ const Game = (() => {
     const order = [];
     for (let i = 0; i < state.players.length; i++) {
       if (i === state.dealerIndex) continue;
-      if (state.players[i].chips <= 0) continue;
+      if (state.gameMode === 'betting' && state.players[i].chips <= 0) continue;
       if (state.players[i].status === 'blackjack') continue;
       if (state.players[i].status === 'bust') continue;
       order.push(i);
@@ -251,7 +267,7 @@ const Game = (() => {
   function allNonDealersDone() {
     for (let i = 0; i < state.players.length; i++) {
       if (i === state.dealerIndex) continue;
-      if (state.players[i].chips <= 0) continue;
+      if (state.gameMode === 'betting' && state.players[i].chips <= 0) continue;
       const s = state.players[i].status;
       if (s === 'playing') return false;
     }
@@ -261,15 +277,18 @@ const Game = (() => {
   function allNonDealersBust() {
     for (let i = 0; i < state.players.length; i++) {
       if (i === state.dealerIndex) continue;
-      if (state.players[i].chips <= 0) continue;
+      if (state.gameMode === 'betting' && state.players[i].chips <= 0) continue;
       if (state.players[i].status !== 'bust') return false;
     }
     return true;
   }
 
   function isGameOver() {
-    // Game over when ALL human players have 0 chips
-    return !state.humanIndices.some(i => state.players[i].chips > 0);
+    if (state.round >= state.roundsTarget) return true;
+    if (state.gameMode === 'betting') {
+      return !state.humanIndices.some(i => state.players[i].chips > 0);
+    }
+    return false;
   }
 
   return {
