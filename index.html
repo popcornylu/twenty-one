@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>21點 Blackjack</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Setup Screen -->
+  <div id="setup-screen" class="screen active">
+    <div class="setup-container">
+      <h1 class="game-title">♠ 21點 ♥</h1>
+      <h2 class="game-subtitle">BLACKJACK</h2>
+
+      <div class="setup-section">
+        <label class="section-label">玩家人數</label>
+        <div class="toggle-group" id="player-count-group">
+          <button class="toggle-btn active" data-count="1">1</button>
+          <button class="toggle-btn" data-count="2">2</button>
+          <button class="toggle-btn" data-count="3">3</button>
+          <button class="toggle-btn" data-count="4">4</button>
+          <button class="toggle-btn" data-count="5">5</button>
+          <button class="toggle-btn" data-count="6">6</button>
+        </div>
+      </div>
+
+      <div class="setup-section" id="player-config-section">
+        <label class="section-label">玩家設定</label>
+        <div id="player-config-list"></div>
+      </div>
+
+      <button id="start-btn" class="primary-btn">開始遊戲</button>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game-screen" class="screen">
+    <div class="game-table">
+      <div id="dealer-area" class="player-area dealer-area">
+        <div class="dealer-header">
+          <div class="player-info">
+            <span class="player-name"></span>
+            <span class="player-score"></span>
+          </div>
+          <span class="deck-count"></span>
+          <button id="pause-btn" class="pause-btn" title="暫停">⏸</button>
+        </div>
+        <div class="hand"></div>
+      </div>
+
+      <div id="players-area"></div>
+    </div>
+  </div>
+
+  <!-- Pause Overlay -->
+  <div id="pause-overlay" class="overlay hidden">
+    <div class="overlay-content pause-content">
+      <h2 class="pause-title">⏸ 遊戲暫停</h2>
+      <div class="pause-actions">
+        <button id="resume-btn" class="pause-action-btn pause-resume">繼續遊戲</button>
+        <button id="restart-btn" class="pause-action-btn pause-restart">重新開始</button>
+        <button id="quit-btn" class="pause-action-btn pause-quit">離開遊戲</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="js/game.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
