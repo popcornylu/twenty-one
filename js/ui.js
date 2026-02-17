@@ -102,7 +102,7 @@ const UI = (() => {
       cls = 'score-bust';
     } else if (score === 21 && allVisible) {
       cls = 'score-21';
-      if (hand.length === 2) extra = ' 21\u9ede\u4e86!';
+      if (hand.length === 2) extra = ' \u4e8c\u5341\u4e00\u9ede!';
     } else if (score > 21) {
       cls = 'score-bust';
     }
@@ -147,7 +147,6 @@ const UI = (() => {
     }
 
     if (player.status === 'bust') return '<span class="status-badge status-lose">爆牌</span>';
-    if (player.status === 'blackjack') return '<span class="status-badge status-bj">二十一點!</span>';
     return '';
   }
 
