@@ -130,7 +130,7 @@ const UI = (() => {
         } else {
           change = '+1';
         }
-        return '<span class="status-badge status-win">Win! ' + change + '</span>';
+        return '<span class="status-badge status-win">Win ' + change + '</span>';
       } else if (player.result === 'lose') {
         let change;
         if (state.gameMode === 'betting') {
@@ -139,10 +139,10 @@ const UI = (() => {
           change = '-1';
         }
         return '<span class="status-badge status-lose">' +
-          (player.status === 'bust' ? '爆牌 ' : 'Lose! ') + change + '</span>';
+          (player.status === 'bust' ? '爆牌 ' : 'Lose ') + change + '</span>';
       } else {
         let change = state.gameMode === 'points' ? ' +0.5' : '';
-        return '<span class="status-badge status-draw">Draw!' + change + '</span>';
+        return '<span class="status-badge status-draw">Draw' + change + '</span>';
       }
     }
 
