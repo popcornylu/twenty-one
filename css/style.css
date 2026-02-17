@@ -279,6 +279,11 @@ body {
   font-size: clamp(0.85rem, 2vw, 1rem);
 }
 
+.player-result {
+  min-height: 1.4em;
+  margin-bottom: 0.3rem;
+}
+
 .player-meta {
   display: flex;
   gap: 1rem;
@@ -562,7 +567,6 @@ body {
   border-radius: 6px;
   font-size: clamp(0.75rem, 1.8vw, 0.9rem);
   font-weight: 700;
-  animation: fade-in 0.3s ease;
 }
 
 .status-lose {

@@ -100,6 +100,7 @@ const UI = (() => {
 
     if (player.status === 'bust') {
       cls = 'score-bust';
+      extra = ' 爆牌';
     } else if (score === 21 && allVisible) {
       cls = 'score-21';
       if (hand.length === 2) extra = ' \u4e8c\u5341\u4e00\u9ede!';
@@ -113,9 +114,9 @@ const UI = (() => {
     return '<span class="score-badge ' + cls + '">' + text + extra + '</span>';
   }
 
-  /* ---------- player status badge ---------- */
+  /* ---------- result badge (row 2) ---------- */
 
-  function statusBadge(player) {
+  function resultBadge(player) {
     const state = Game.state;
 
     // During results phase, show result badge with score/chip change
@@ -138,15 +139,24 @@ const UI = (() => {
         } else {
           change = '-1';
         }
-        return '<span class="status-badge status-lose">' +
-          (player.status === 'bust' ? '爆牌 ' : 'Lose ') + change + '</span>';
+        return '<span class="status-badge status-lose">Lose ' + change + '</span>';
       } else {
         let change = state.gameMode === 'points' ? ' +0.5' : '';
         return '<span class="status-badge status-draw">Draw' + change + '</span>';
       }
     }
 
-    if (player.status === 'bust') return '<span class="status-badge status-lose">爆牌</span>';
+    // Bust players show Lose immediately (before results phase)
+    if (player.status === 'bust' && !player.isDealer) {
+      let change;
+      if (state.gameMode === 'betting') {
+        change = '-' + player.currentBet;
+      } else {
+        change = '-1';
+      }
+      return '<span class="status-badge status-lose">Lose ' + change + '</span>';
+    }
+
     return '';
   }
 
@@ -169,7 +179,9 @@ const UI = (() => {
     nameEl.textContent = dealer.name;
     const showAll = state.phase === 'dealerTurn' || state.phase === 'results';
     scoreEl.innerHTML = scoreHTML(dealer, showAll);
-    scoreEl.innerHTML += ' ' + statusBadge(dealer);
+
+    const dealerResultEl = area.querySelector('.player-result');
+    if (dealerResultEl) dealerResultEl.innerHTML = resultBadge(dealer);
 
     if (deckCountEl) {
       deckCountEl.textContent = '牌堆: ' + state.deck.length;
@@ -263,8 +275,8 @@ const UI = (() => {
         '<div class="player-info">' +
           '<span class="player-name">' + p.name + '</span>' +
           scoreHTML(p, true) +
-          ' ' + statusBadge(p) +
         '</div>' +
+        '<div class="player-result">' + resultBadge(p) + '</div>' +
         '<div class="player-meta">' + metaHtml + '</div>' +
         '<div class="hand"></div>';
 
@@ -343,15 +355,24 @@ const UI = (() => {
     if (player.isDealer) {
       const scoreEl = $('#dealer-area .player-score');
       const showAll = state.phase === 'dealerTurn' || state.phase === 'results';
-      scoreEl.innerHTML = scoreHTML(player, showAll) + ' ' + statusBadge(player);
+      scoreEl.innerHTML = scoreHTML(player, showAll);
+      const resultEl = $('#dealer-area .player-result');
+      if (resultEl) {
+        const newResult = resultBadge(player);
+        if (resultEl.innerHTML !== newResult) resultEl.innerHTML = newResult;
+      }
     } else {
       const area = $('[data-player-index="' + playerIndex + '"]');
       if (area) {
         const info = area.querySelector('.player-info');
         info.innerHTML =
           '<span class="player-name">' + player.name + '</span>' +
-          scoreHTML(player, true) +
-          ' ' + statusBadge(player);
+          scoreHTML(player, true);
+        const resultEl = area.querySelector('.player-result');
+        if (resultEl) {
+          const newResult = resultBadge(player);
+          if (resultEl.innerHTML !== newResult) resultEl.innerHTML = newResult;
+        }
       }
     }
   }
