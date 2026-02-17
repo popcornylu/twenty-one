@@ -11,32 +11,32 @@ const UI = (() => {
   const SEAT_LAYOUTS = {
     2: [
       { x: 50, y: 82, r: 0 },     // bottom-center
-      { x: 50, y: 15, r: 180 },   // top-center
+      { x: 50, y: 22, r: 180 },   // top-center
     ],
     3: [
       { x: 50, y: 82, r: 0 },     // bottom-center
       { x: 78, y: 50, r: -90 },   // right-center
-      { x: 50, y: 15, r: 180 },   // top-center
+      { x: 50, y: 22, r: 180 },   // top-center
     ],
     4: [
       { x: 50, y: 82, r: 0 },     // bottom-center
       { x: 78, y: 50, r: -90 },   // right-center
-      { x: 50, y: 15, r: 180 },   // top-center
+      { x: 50, y: 22, r: 180 },   // top-center
       { x: 22, y: 50, r: 90 },    // left-center
     ],
     5: [
       { x: 35, y: 82, r: 0 },     // bottom@35%
       { x: 65, y: 82, r: 0 },     // bottom@65%
       { x: 78, y: 50, r: -90 },   // right-center
-      { x: 50, y: 15, r: 180 },   // top-center
+      { x: 50, y: 22, r: 180 },   // top-center
       { x: 22, y: 50, r: 90 },    // left-center
     ],
     6: [
       { x: 35, y: 82, r: 0 },     // bottom@35%
       { x: 65, y: 82, r: 0 },     // bottom@65%
       { x: 78, y: 50, r: -90 },   // right-center
-      { x: 65, y: 15, r: 180 },   // top@65%
-      { x: 35, y: 15, r: 180 },   // top@35%
+      { x: 65, y: 22, r: 180 },   // top@65%
+      { x: 35, y: 22, r: 180 },   // top@35%
       { x: 22, y: 50, r: 90 },    // left-center
     ],
   };
