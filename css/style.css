@@ -939,7 +939,7 @@ body {
   font-size: 1rem;
 }
 .ranking-name.human-name {
-  color: var(--gold);
+  color: inherit;
 }
 
 .ranking-score {
