@@ -244,7 +244,8 @@ const UI = (() => {
       const seat = getSeatPosition(seatIdx, activePlayers.length);
       div.style.setProperty('--seat-x', seat.x + '%');
       div.style.setProperty('--seat-y', seat.y + '%');
-      div.style.setProperty('--seat-rotation', seat.r + 'deg');
+      const rotation = UI.layoutEdge ? seat.r : 0;
+      div.style.setProperty('--seat-rotation', rotation + 'deg');
 
       if (p.isHuman) {
         div.classList.add('human-player-area');
@@ -439,6 +440,7 @@ const UI = (() => {
     showResults,
     hideResults,
     setActivePlayer,
-    delay
+    delay,
+    layoutEdge: false
   };
 })();

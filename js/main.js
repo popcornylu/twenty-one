@@ -75,6 +75,25 @@
   $('#quit-btn').addEventListener('click', quitGame);
 
   /* ============================
+     Layout Toggle (Upright / Edge-Facing)
+     ============================ */
+
+  UI.layoutEdge = localStorage.getItem('layoutEdge') === 'true';
+
+  function updateLayoutToggleBtn() {
+    const btn = $('#layout-toggle-btn');
+    if (btn) btn.classList.toggle('active', UI.layoutEdge);
+  }
+  updateLayoutToggleBtn();
+
+  $('#layout-toggle-btn').addEventListener('click', () => {
+    UI.layoutEdge = !UI.layoutEdge;
+    localStorage.setItem('layoutEdge', UI.layoutEdge);
+    updateLayoutToggleBtn();
+    if (Game.state) UI.renderGameScreen();
+  });
+
+  /* ============================
      Setup Screen
      ============================ */
 
