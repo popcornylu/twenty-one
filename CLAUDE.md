@@ -5,11 +5,11 @@ Single-page multiplayer Blackjack game in Traditional Chinese. Pure HTML/CSS/JS,
 
 ## File Structure
 ```
-index.html          - Setup screen, game screen, pause overlay
+index.html          - Setup screen, game screen, pause/announcement/ranking overlays
 css/style.css       - Casino theme, responsive layout, card styles, animations
 js/game.js          - Core game logic, deck, scoring, state management
 js/main.js          - Entry point, event binding, game flow orchestration
-js/ui.js            - DOM rendering, seat positioning, screen management
+js/ui.js            - DOM rendering, seat positioning, overlays, screen management
 js/ai.js            - AI decision engine for computer players and dealer
 .github/workflows/deploy.yml - GitHub Pages deployment
 ```
@@ -27,6 +27,7 @@ js/ai.js            - AI decision engine for computer players and dealer
 - `players`: Player[] - all players + dealer (dealer always last)
 - `dealerIndex`, `humanIndices`, `currentPlayerIndex`, `currentBettingIndex`
 - `round`, `gameMode` ('betting'|'points'), `roundsTarget`, `startingPoints`
+- `dealerSkipped`: boolean - true when all players bust (dealer skips play)
 
 ## Player Object
 - `name`, `isHuman`, `isDealer`, `hand`: Card[]
@@ -54,6 +55,11 @@ js/ai.js            - AI decision engine for computer players and dealer
 - CSS uses `translate(-50%, -50%) rotate(var(--seat-rotation))` for centering
 - Mobile (<768px): Falls back to static vertical layout
 
+## Layout Toggle
+- Button in top-right of game screen toggles upright (default) vs edge-facing card rotation
+- `UI.layoutEdge` boolean, persisted in `localStorage('layoutEdge')`
+- Calls `UI.renderGameScreen()` on toggle; hidden on mobile
+
 ## AI Logic (ai.js)
 - **Dealer**: Hit on <=16, stand on >=17 (deterministic)
 - **Computer players**: Basic strategy with randomness based on dealer's up card
@@ -61,16 +67,32 @@ js/ai.js            - AI decision engine for computer players and dealer
   - Strong dealer (7+): Aggressive (mostly hit <=18)
   - Soft hands: 30% chance to hit on 17-18
 - **Betting**: Random selection from affordable chip amounts [10, 25, 50, 100]
+- **Decision bubbles**: White speech bubble shown above AI player area for 800ms ("要牌" green / "停牌" red)
 
 ## Pause System
-- `waitIfPaused()` returns a Promise; blocks at 6 points during gameplay
+- `waitIfPaused()` returns a Promise; blocks at 4 points during gameplay: before card deal, before AI decision, before dealer flip, before dealer hit
 - Resume resolves the promise; pause overlay has Resume/Restart/Quit buttons
 
+## Announcement Overlay
+- `UI.showAnnouncement(text, duration)` returns a Promise; shows large gold text with pop animation
+- Used for: "遊戲開始", "回合 X", "最終回合", "遊戲結束"
+- Full-screen semi-transparent backdrop, non-interactive (pointer-events: none)
+
+## Ranking Overlay
+- `UI.showRanking(players, gameMode)` shown on game over after "遊戲結束" announcement
+- Players sorted by chips (betting) or score (points), dealer excluded
+- **Tied ranks**: players with same value share the same rank number (e.g. two 1st, then 3rd)
+- Top 3 get trophy emojis (🥇🥈🥉) + ordinal labels (1st/2nd/3rd); 4th+ get ordinal only
+- Human player rows have gold border (`.human-row`); 4th+ rows dimmed (`.ranking-dim`, opacity 0.5)
+- Rank colors: 1st gold, 2nd silver, 3rd bronze
+- Actions: "再玩一次" (restart) and "離開遊戲" (quit to setup)
+
 ## Game Flow
-1. Setup screen -> `Game.initGame(config)` -> `startNewRound()`
-2. Round: betting (if betting mode) -> dealing (2 cards each, animated) -> check blackjacks -> player turns -> dealer turn -> results
-3. Results show badges with score/chip changes; "下一局" or "結束遊戲" buttons
-4. Game over when rounds exhausted or all humans out of chips (betting mode)
+1. Setup screen -> `Game.initGame(config)` -> announcement "遊戲開始" -> `startNewRound()`
+2. Round: announcement "回合 X" (or "最終回合") -> betting (if betting mode) -> dealing (2 cards each, animated) -> check blackjacks -> player turns -> dealer turn -> results
+3. Results show badges with score/chip changes; auto-next countdown "下一回合 (5)" counts down 5s
+4. Game over: announcement "遊戲結束" -> ranking overlay with "再玩一次" / "離開遊戲"
+5. If all players bust, dealer skips play (`dealerSkipped = true`, hidden card stays hidden)
 
 ## CSS Theme
 - Casino green felt background (radial gradient)
@@ -79,7 +101,8 @@ js/ai.js            - AI decision engine for computer players and dealer
 - Responsive: mobile (<768px), tablet (768-1023px), desktop (1024+px)
 
 ## Key Patterns
-- Event delegation on `#dealer-area` for dynamic round-action buttons
+- Event delegation on `#game-screen` for hit/stand buttons (survives layout toggle re-renders)
+- Event delegation on `#dealer-area` for round-action buttons
 - All human bets collected via `Promise.all()` (simultaneous betting)
 - DOM fully rebuilt on each `renderGameScreen()` call
 - `Game` module uses closure for private state; exposes via return object
