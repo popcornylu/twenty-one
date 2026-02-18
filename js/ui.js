@@ -477,21 +477,35 @@ const UI = (() => {
     var ordinals = ['1st', '2nd', '3rd'];
     var trophies = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
 
+    function getOrdinal(n) {
+      if (n <= 3) return ordinals[n - 1];
+      return n + 'th';
+    }
+
+    function getValue(p) {
+      return gameMode === 'betting' ? p.chips : p.score;
+    }
+
     for (var i = 0; i < sorted.length; i++) {
       var p = sorted[i];
+      // Tied players share the same rank
+      var rank = (i > 0 && getValue(sorted[i]) === getValue(sorted[i - 1]))
+        ? rank : i + 1;
+      var rankIdx = rank - 1;
+
       var row = document.createElement('div');
       row.className = 'ranking-row';
       if (p.isHuman) row.className += ' human-row';
-      if (i >= 3) row.className += ' ranking-dim';
+      if (rankIdx >= 3) row.className += ' ranking-dim';
 
-      var rankCls = i < 3 ? rankColors[i] : '';
+      var rankCls = rankIdx < 3 ? rankColors[rankIdx] : '';
       var nameCls = p.isHuman ? ' human-name' : '';
       var value = gameMode === 'betting'
         ? '\uD83C\uDFB0 ' + p.chips
         : '\uD83D\uDCCA ' + p.score;
 
-      var ordinal = i < 3 ? ordinals[i] : (i + 1) + 'th';
-      var rankText = i < 3 ? trophies[i] + ' ' + ordinal : ordinal;
+      var ordinal = getOrdinal(rank);
+      var rankText = rankIdx < 3 ? trophies[rankIdx] + ' ' + ordinal : ordinal;
 
       row.innerHTML =
         '<span class="ranking-rank ' + rankCls + '">' + rankText + '</span>' +

@@ -384,35 +384,29 @@
 
   function humanTurn(playerIndex) {
     return new Promise(resolve => {
-      function onHit() {
-        const result = Game.playerHit(playerIndex);
-        UI.renderGameScreen();
+      const screen = $('#game-screen');
 
-        if (result === 'bust' || result === 'twentyone') {
-          setTimeout(resolve, 800);
-          return;
-        }
-
-        // DOM was rebuilt by renderGameScreen — rebind new buttons
-        rebindButtons();
-      }
-
-      function onStand() {
-        Game.playerStand(playerIndex);
-        UI.renderGameScreen();
-        resolve();
-      }
-
-      function rebindButtons() {
-        const area = document.querySelector('[data-player-index="' + playerIndex + '"]');
+      function handler(e) {
+        const area = e.target.closest('[data-player-index="' + playerIndex + '"]');
         if (!area) return;
-        const hitBtn = area.querySelector('.inline-hit-btn');
-        const standBtn = area.querySelector('.inline-stand-btn');
-        if (hitBtn) hitBtn.addEventListener('click', onHit);
-        if (standBtn) standBtn.addEventListener('click', onStand);
+
+        if (e.target.closest('.inline-hit-btn')) {
+          const result = Game.playerHit(playerIndex);
+          UI.renderGameScreen();
+
+          if (result === 'bust' || result === 'twentyone') {
+            screen.removeEventListener('click', handler);
+            setTimeout(resolve, 800);
+          }
+        } else if (e.target.closest('.inline-stand-btn')) {
+          screen.removeEventListener('click', handler);
+          Game.playerStand(playerIndex);
+          UI.renderGameScreen();
+          resolve();
+        }
       }
 
-      rebindButtons();
+      screen.addEventListener('click', handler);
     });
   }
 
