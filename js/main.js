@@ -45,7 +45,7 @@
     }
   }
 
-  function restartGame() {
+  async function restartGame() {
     paused = false;
     cancelAutoNext();
     $('#pause-overlay').classList.add('hidden');
@@ -56,6 +56,9 @@
       roundsTarget: selectedRounds,
       startingPoints: selectedStartingPoints
     });
+    UI.showScreen('game-screen');
+    UI.renderGameScreen();
+    await UI.showAnnouncement('遊戲開始');
     startNewRound();
   }
 
@@ -73,6 +76,16 @@
   $('#resume-btn').addEventListener('click', resumeGame);
   $('#restart-btn').addEventListener('click', restartGame);
   $('#quit-btn').addEventListener('click', quitGame);
+
+  // Bind ranking buttons
+  $('#play-again-btn').addEventListener('click', () => {
+    UI.hideRanking();
+    restartGame();
+  });
+  $('#exit-game-btn').addEventListener('click', () => {
+    UI.hideRanking();
+    quitGame();
+  });
 
   /* ============================
      Layout Toggle (Upright / Edge-Facing)
@@ -186,13 +199,16 @@
   buildPlayerConfigUI();
 
   // Start game
-  $('#start-btn').addEventListener('click', () => {
+  $('#start-btn').addEventListener('click', async () => {
     Game.initGame({
       playerConfigs,
       gameMode: selectedGameMode,
       roundsTarget: selectedRounds,
       startingPoints: selectedStartingPoints
     });
+    UI.showScreen('game-screen');
+    UI.renderGameScreen();
+    await UI.showAnnouncement('遊戲開始');
     startNewRound();
   });
 
@@ -205,6 +221,14 @@
     const state = Game.state;
 
     UI.showScreen('game-screen');
+    UI.renderGameScreen();
+
+    // Round announcement
+    if (state.round === state.roundsTarget) {
+      await UI.showAnnouncement('最終回合', 1200);
+    } else {
+      await UI.showAnnouncement('回合 ' + state.round, 1200);
+    }
 
     if (state.gameMode === 'betting') {
       // Computer players bet immediately
@@ -441,7 +465,7 @@
     // If everyone bust, skip dealer play entirely (don't reveal hidden card)
     if (Game.allNonDealersBust()) {
       Game.state.dealerSkipped = true;
-      finishRound();
+      await finishRound();
       return;
     }
 
@@ -457,7 +481,7 @@
     if (Game.checkNaturalBlackjack(dealer)) {
       UI.renderGameScreen();
       await UI.delay(800);
-      finishRound();
+      await finishRound();
       return;
     }
 
@@ -481,17 +505,24 @@
     }
 
     await UI.delay(600);
-    finishRound();
+    await finishRound();
   }
 
   /* ============================
      Results
      ============================ */
 
-  function finishRound() {
+  async function finishRound() {
     Game.calculateResults();
     UI.renderGameScreen();
-    startAutoNextCountdown();
+
+    if (Game.isGameOver()) {
+      await UI.delay(2000);
+      await UI.showAnnouncement('遊戲結束', 1800);
+      UI.showRanking(Game.state.players, Game.state.gameMode);
+    } else {
+      startAutoNextCountdown();
+    }
   }
 
   function startAutoNextCountdown() {
@@ -500,12 +531,12 @@
 
     let remaining = 5;
     const btn = document.querySelector('.round-next-btn');
-    if (btn) btn.textContent = '下一局 (' + remaining + ')';
+    if (btn) btn.textContent = '下一回合 (' + remaining + ')';
 
     autoNextInterval = setInterval(() => {
       remaining--;
       const btn = document.querySelector('.round-next-btn');
-      if (btn) btn.textContent = '下一局 (' + remaining + ')';
+      if (btn) btn.textContent = '下一回合 (' + remaining + ')';
       if (remaining <= 0) {
         cancelAutoNext();
         startNewRound();

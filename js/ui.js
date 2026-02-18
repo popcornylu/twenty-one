@@ -206,13 +206,12 @@ const UI = (() => {
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'round-actions';
       if (Game.isGameOver()) {
-        actionsDiv.innerHTML =
-          '<button class="primary-btn round-end-btn">重新開始</button>';
+        // Ranking overlay handles game-over; no button needed here
       } else {
         actionsDiv.innerHTML =
-          '<button class="primary-btn round-next-btn">下一局</button>';
+          '<button class="primary-btn round-next-btn">下一回合</button>';
       }
-      area.appendChild(actionsDiv);
+      if (actionsDiv.innerHTML.trim()) area.appendChild(actionsDiv);
     }
 
     area.classList.toggle('active-player',
@@ -428,6 +427,87 @@ const UI = (() => {
     }
   }
 
+  /* ---------- phase announcements ---------- */
+
+  function showAnnouncement(text, duration) {
+    duration = duration || 1500;
+    var holdTime = duration - 400;
+    if (holdTime < 200) holdTime = 200;
+
+    return new Promise(function (resolve) {
+      var overlay = $('#announcement-overlay');
+      var textEl = overlay.querySelector('.announcement-text');
+
+      // Reset state
+      overlay.classList.remove('fading');
+      textEl.textContent = text;
+
+      // Force reflow to restart animation
+      textEl.offsetWidth;
+
+      overlay.classList.remove('hidden');
+
+      setTimeout(function () {
+        overlay.classList.add('fading');
+        setTimeout(function () {
+          overlay.classList.add('hidden');
+          overlay.classList.remove('fading');
+          resolve();
+        }, 400);
+      }, holdTime);
+    });
+  }
+
+  /* ---------- ranking overlay ---------- */
+
+  function showRanking(players, gameMode) {
+    var list = $('#ranking-list');
+    list.innerHTML = '';
+
+    // Filter out dealer, sort by chips or score descending
+    var sorted = players
+      .filter(function (p) { return !p.isDealer; })
+      .slice()
+      .sort(function (a, b) {
+        if (gameMode === 'betting') return b.chips - a.chips;
+        return b.score - a.score;
+      });
+
+    var rankColors = ['rank-1', 'rank-2', 'rank-3'];
+    var ordinals = ['1st', '2nd', '3rd'];
+    var trophies = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+
+    for (var i = 0; i < sorted.length; i++) {
+      var p = sorted[i];
+      var row = document.createElement('div');
+      row.className = 'ranking-row';
+      if (p.isHuman) row.className += ' human-row';
+      if (i >= 3) row.className += ' ranking-dim';
+
+      var rankCls = i < 3 ? rankColors[i] : '';
+      var nameCls = p.isHuman ? ' human-name' : '';
+      var value = gameMode === 'betting'
+        ? '\uD83C\uDFB0 ' + p.chips
+        : '\uD83D\uDCCA ' + p.score;
+
+      var ordinal = i < 3 ? ordinals[i] : (i + 1) + 'th';
+      var rankText = i < 3 ? trophies[i] + ' ' + ordinal : ordinal;
+
+      row.innerHTML =
+        '<span class="ranking-rank ' + rankCls + '">' + rankText + '</span>' +
+        '<span class="ranking-name' + nameCls + '">' + p.name + '</span>' +
+        '<span class="ranking-score">' + value + '</span>';
+
+      list.appendChild(row);
+    }
+
+    $('#ranking-overlay').classList.remove('hidden');
+  }
+
+  function hideRanking() {
+    $('#ranking-overlay').classList.add('hidden');
+  }
+
   return {
     showScreen,
     createCardEl,
@@ -441,6 +521,9 @@ const UI = (() => {
     hideResults,
     setActivePlayer,
     delay,
+    showAnnouncement,
+    showRanking,
+    hideRanking,
     layoutEdge: false
   };
 })();
