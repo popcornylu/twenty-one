@@ -19,6 +19,8 @@
 
   let paused = false;
   let pauseResolve = null;
+  let autoNextTimer = null;
+  let autoNextInterval = null;
 
   function waitIfPaused() {
     if (!paused) return Promise.resolve();
@@ -45,6 +47,7 @@
 
   function restartGame() {
     paused = false;
+    cancelAutoNext();
     $('#pause-overlay').classList.add('hidden');
     pauseResolve = null;
     Game.initGame({
@@ -58,6 +61,7 @@
 
   function quitGame() {
     paused = false;
+    cancelAutoNext();
     $('#pause-overlay').classList.add('hidden');
     pauseResolve = null;
     UI.hideResults();
@@ -383,6 +387,17 @@
       const score = Game.calculateScore(player.hand);
       const decision = AI.playerDecision(player.hand, score, dealerUpCard);
 
+      // Show decision bubble
+      const playerArea = document.querySelector('.player-area[data-player-index="' + playerIndex + '"]');
+      if (playerArea) {
+        const bubble = document.createElement('div');
+        bubble.className = 'ai-decision-bubble ' + (decision === 'hit' ? 'hit' : 'stand');
+        bubble.textContent = decision === 'hit' ? '要牌' : '停牌';
+        playerArea.style.position = 'relative';
+        playerArea.appendChild(bubble);
+        await UI.delay(800);
+      }
+
       if (decision === 'hit') {
         const result = Game.playerHit(playerIndex);
         UI.renderGameScreen();
@@ -404,11 +419,9 @@
     state.phase = 'dealerTurn';
     state.currentPlayerIndex = state.dealerIndex;
 
-    // If everyone bust, skip dealer play
+    // If everyone bust, skip dealer play entirely (don't reveal hidden card)
     if (Game.allNonDealersBust()) {
-      Game.revealDealerCard();
-      UI.renderGameScreen();
-      await UI.delay(800);
+      Game.state.dealerSkipped = true;
       finishRound();
       return;
     }
@@ -459,13 +472,40 @@
   function finishRound() {
     Game.calculateResults();
     UI.renderGameScreen();
+    startAutoNextCountdown();
+  }
+
+  function startAutoNextCountdown() {
+    cancelAutoNext();
+    if (Game.isGameOver()) return;
+
+    let remaining = 5;
+    const btn = document.querySelector('.round-next-btn');
+    if (btn) btn.textContent = '下一局 (' + remaining + ')';
+
+    autoNextInterval = setInterval(() => {
+      remaining--;
+      const btn = document.querySelector('.round-next-btn');
+      if (btn) btn.textContent = '下一局 (' + remaining + ')';
+      if (remaining <= 0) {
+        cancelAutoNext();
+        startNewRound();
+      }
+    }, 1000);
+  }
+
+  function cancelAutoNext() {
+    if (autoNextTimer) { clearTimeout(autoNextTimer); autoNextTimer = null; }
+    if (autoNextInterval) { clearInterval(autoNextInterval); autoNextInterval = null; }
   }
 
   // Event delegation for round action buttons (rendered inside #dealer-area)
   $('#dealer-area').addEventListener('click', (e) => {
     if (e.target.classList.contains('round-next-btn')) {
+      cancelAutoNext();
       startNewRound();
     } else if (e.target.classList.contains('round-end-btn')) {
+      cancelAutoNext();
       UI.showScreen('setup-screen');
     }
   });

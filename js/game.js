@@ -122,7 +122,8 @@ const Game = (() => {
       round: 0,
       gameMode,
       roundsTarget,
-      startingPoints
+      startingPoints,
+      dealerSkipped: false
     };
 
     return state;
@@ -131,6 +132,7 @@ const Game = (() => {
   function startRound() {
     state.round++;
     state.phase = state.gameMode === 'betting' ? 'betting' : 'dealing';
+    state.dealerSkipped = false;
     for (const player of state.players) {
       player.hand = [];
       player.currentBet = 0;

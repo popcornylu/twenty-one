@@ -177,7 +177,7 @@ const UI = (() => {
     const deckCountEl = area.querySelector('.deck-count');
 
     nameEl.textContent = dealer.name;
-    const showAll = state.phase === 'dealerTurn' || state.phase === 'results';
+    const showAll = (state.phase === 'dealerTurn' || state.phase === 'results') && !state.dealerSkipped;
     scoreEl.innerHTML = scoreHTML(dealer, showAll);
 
     const dealerResultEl = area.querySelector('.player-result');
@@ -210,8 +210,7 @@ const UI = (() => {
           '<button class="primary-btn round-end-btn">重新開始</button>';
       } else {
         actionsDiv.innerHTML =
-          '<button class="primary-btn round-next-btn">下一局</button>' +
-          '<button class="secondary-btn round-end-btn">結束遊戲</button>';
+          '<button class="primary-btn round-next-btn">下一局</button>';
       }
       area.appendChild(actionsDiv);
     }
@@ -354,7 +353,7 @@ const UI = (() => {
 
     if (player.isDealer) {
       const scoreEl = $('#dealer-area .player-score');
-      const showAll = state.phase === 'dealerTurn' || state.phase === 'results';
+      const showAll = (state.phase === 'dealerTurn' || state.phase === 'results') && !state.dealerSkipped;
       scoreEl.innerHTML = scoreHTML(player, showAll);
       const resultEl = $('#dealer-area .player-result');
       if (resultEl) {
