@@ -14,6 +14,110 @@
   let playerConfigs = [{ type: 'human' }, { type: 'computer' }];
 
   /* ============================
+     Starting Chips Numpad
+     ============================ */
+
+  let selectedStartingChips = 0;
+  let chipsDigits = [];
+  let chipsConfirmed = false;
+
+  function updateChipsDisplay() {
+    const d0 = $('#chips-d0');
+    const d1 = $('#chips-d1');
+    if (!d0 || !d1) return;
+
+    if (chipsDigits.length === 0) {
+      d0.className = 'digit-box empty';
+      d0.textContent = '_';
+      d1.className = 'digit-box hidden-digit';
+      d1.textContent = '';
+    } else if (chipsDigits.length === 1) {
+      d0.className = 'digit-box';
+      d0.textContent = chipsDigits[0];
+      d1.className = 'digit-box hidden-digit';
+      d1.textContent = '';
+    } else {
+      d0.className = 'digit-box';
+      d0.textContent = chipsDigits[0];
+      d1.className = 'digit-box';
+      d1.textContent = chipsDigits[1];
+    }
+  }
+
+  function updateNumpadState() {
+    const btns = $$('#numpad .numpad-btn');
+    const len = chipsDigits.length;
+    const first = chipsDigits[0];
+
+    btns.forEach(btn => {
+      const digit = parseInt(btn.dataset.digit);
+      let enabled = false;
+
+      if (len === 0) {
+        // Empty: allow 1-9 (no leading zero)
+        enabled = digit >= 1 && digit <= 9;
+      } else if (len === 1 && first === 1) {
+        // After '1': only 0 allowed (to make 1000)
+        enabled = digit === 0;
+      }
+      // After 2-9 or after '10': all disabled (input complete)
+
+      btn.disabled = !enabled;
+    });
+  }
+
+  function clearChipsInput() {
+    chipsDigits = [];
+    chipsConfirmed = false;
+    selectedStartingChips = 0;
+    updateChipsDisplay();
+    updateNumpadState();
+    $('#chips-clear-btn').disabled = true;
+    $('#chips-confirm-btn').disabled = true;
+    $('#starting-chips-section').classList.remove('chips-confirmed');
+    updateStartBtnState();
+  }
+
+  function confirmChipsInput() {
+    if (chipsDigits.length === 0) return;
+    const value = parseInt(chipsDigits.join('')) * 100;
+    if (value <= 0) return;
+    selectedStartingChips = value;
+    chipsConfirmed = true;
+    $('#starting-chips-section').classList.add('chips-confirmed');
+    updateStartBtnState();
+  }
+
+  function updateStartBtnState() {
+    const btn = $('#start-btn');
+    if (selectedGameMode === 'betting') {
+      btn.disabled = !chipsConfirmed || selectedStartingChips <= 0;
+    } else {
+      btn.disabled = false;
+    }
+  }
+
+  // Numpad buttons — direct listeners (avoid delegation issues with emoji content)
+  $$('#numpad .numpad-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      const digit = parseInt(btn.dataset.digit);
+      chipsDigits.push(digit);
+      updateChipsDisplay();
+      updateNumpadState();
+      // Enable clear (always has digits now) and confirm (if valid amount)
+      $('#chips-clear-btn').disabled = false;
+      const inputComplete = chipsDigits.length >= 1 && !(chipsDigits.length === 1 && chipsDigits[0] === 1);
+      const isInputOf10 = chipsDigits.length === 2;
+      $('#chips-confirm-btn').disabled = !(inputComplete || isInputOf10);
+    });
+  });
+
+  // Clear & confirm buttons
+  $('#chips-clear-btn').addEventListener('click', clearChipsInput);
+  $('#chips-confirm-btn').addEventListener('click', confirmChipsInput);
+
+  /* ============================
      Pause System
      ============================ */
 
@@ -54,7 +158,8 @@
       playerConfigs,
       gameMode: selectedGameMode,
       roundsTarget: selectedRounds,
-      startingPoints: selectedStartingPoints
+      startingPoints: selectedStartingPoints,
+      startingChips: selectedGameMode === 'betting' ? selectedStartingChips : undefined
     });
     UI.showScreen('game-screen');
     UI.renderGameScreen();
@@ -168,12 +273,16 @@
       $$('#game-mode-group .toggle-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedGameMode = btn.dataset.mode;
-      const section = $('#starting-points-section');
+      const pointsSection = $('#starting-points-section');
+      const chipsSection = $('#starting-chips-section');
       if (selectedGameMode === 'points') {
-        section.classList.remove('hidden');
+        pointsSection.classList.remove('hidden');
+        chipsSection.classList.add('hidden');
       } else {
-        section.classList.add('hidden');
+        pointsSection.classList.add('hidden');
+        chipsSection.classList.remove('hidden');
       }
+      updateStartBtnState();
     });
   });
 
@@ -198,13 +307,19 @@
   // Initial build
   buildPlayerConfigUI();
 
+  // Initial start button state (disabled until chips confirmed in betting mode)
+  updateStartBtnState();
+  updateNumpadState();
+
   // Start game
   $('#start-btn').addEventListener('click', async () => {
+    if ($('#start-btn').disabled) return;
     Game.initGame({
       playerConfigs,
       gameMode: selectedGameMode,
       roundsTarget: selectedRounds,
-      startingPoints: selectedStartingPoints
+      startingPoints: selectedStartingPoints,
+      startingChips: selectedGameMode === 'betting' ? selectedStartingChips : undefined
     });
     UI.showScreen('game-screen');
     UI.renderGameScreen();

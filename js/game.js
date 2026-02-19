@@ -75,7 +75,8 @@ const Game = (() => {
    * P1-P6 created in order, dealer always last index.
    */
   function initGame(config) {
-    const { playerConfigs, gameMode, roundsTarget, startingPoints } = config;
+    const { playerConfigs, gameMode, roundsTarget, startingPoints, startingChips } = config;
+    const chips = gameMode === 'betting' ? (startingChips || 1000) : 0;
     const deck = shuffleDeck(createDeck());
     const players = [];
     const humanIndices = [];
@@ -90,7 +91,7 @@ const Game = (() => {
         isHuman,
         isDealer: false,
         hand: [],
-        chips: gameMode === 'betting' ? 1000 : 0,
+        chips,
         score: gameMode === 'points' ? startingPoints : 0,
         currentBet: 0,
         status: 'playing',
@@ -104,7 +105,7 @@ const Game = (() => {
       isHuman: false,
       isDealer: true,
       hand: [],
-      chips: gameMode === 'betting' ? 1000 : 0,
+      chips,
       score: 0,
       currentBet: 0,
       status: 'playing',
@@ -123,6 +124,7 @@ const Game = (() => {
       gameMode,
       roundsTarget,
       startingPoints,
+      startingChips: chips,
       dealerSkipped: false
     };
 
