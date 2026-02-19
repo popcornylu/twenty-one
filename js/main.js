@@ -105,11 +105,9 @@
       chipsDigits.push(digit);
       updateChipsDisplay();
       updateNumpadState();
-      // Enable clear (always has digits now) and confirm (if valid amount)
+      // Enable clear and confirm (any digit means valid amount >= 100)
       $('#chips-clear-btn').disabled = false;
-      const inputComplete = chipsDigits.length >= 1 && !(chipsDigits.length === 1 && chipsDigits[0] === 1);
-      const isInputOf10 = chipsDigits.length === 2;
-      $('#chips-confirm-btn').disabled = !(inputComplete || isInputOf10);
+      $('#chips-confirm-btn').disabled = false;
     });
   });
 
