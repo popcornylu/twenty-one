@@ -26,12 +26,12 @@ js/ai.js            - AI decision engine for computer players and dealer
 - `deck`: Card[] - remaining cards, auto-reshuffles when < 15 cards
 - `players`: Player[] - all players + dealer (dealer always last)
 - `dealerIndex`, `humanIndices`, `currentPlayerIndex`, `currentBettingIndex`
-- `round`, `gameMode` ('betting'|'points'), `roundsTarget`, `startingPoints`
+- `round`, `gameMode` ('betting'|'points'), `roundsTarget`, `startingPoints`, `startingChips`
 - `dealerSkipped`: boolean - true when all players bust (dealer skips play)
 
 ## Player Object
 - `name`, `isHuman`, `isDealer`, `hand`: Card[]
-- `chips` (betting mode, starts 1000), `score` (points mode, starts at config)
+- `chips` (betting mode, starts at user-configured value), `score` (points mode, starts at config)
 - `currentBet`, `status` ('playing'|'standing'|'bust'|'blackjack'), `result` ('win'|'lose'|'draw'|null)
 
 ## Card Object
@@ -39,13 +39,14 @@ js/ai.js            - AI decision engine for computer players and dealer
 - Values: A=11 (reduces to 1 if bust), J/Q/K=10, others=face value
 
 ## Game Modes
-- **Betting (下注模式)**: Players start with 1000 chips, bet each round (10/25/50/100). Win pays 1:1, blackjack pays 1.5:1. Game over when all humans bust or rounds exhausted.
+- **Betting (下注模式)**: Players start with user-configured chips (100-1000, multiples of 100), bet each round (10/25/50/100). Win pays 1:1, blackjack pays 1.5:1. Game over when all humans bust or rounds exhausted.
 - **Points (點數模式)**: Win=+1, Lose=-1, Draw=+0.5. No betting UI. Game over when rounds exhausted.
 
 ## Setup Configuration
 - Player count: 2-6 (P1 always human, others toggleable human/computer)
 - Game mode: betting or points
 - Round count: 5, 10, or 15
+- Starting chips: 100-1000 in multiples of 100 (betting mode only, via virtual numpad)
 - Starting points: 1-5 (points mode only, hidden in betting mode)
 
 ## Seat Positioning System (ui.js)
@@ -54,6 +55,16 @@ js/ai.js            - AI decision engine for computer players and dealer
 - Applied via CSS custom properties: `--seat-x`, `--seat-y`, `--seat-rotation`
 - CSS uses `translate(-50%, -50%) rotate(var(--seat-rotation))` for centering
 - Mobile (<768px): Falls back to static vertical layout
+
+## Starting Chips Numpad (main.js)
+- Virtual numpad in setup screen for betting mode; hidden in points mode
+- Display: 4 slots — up to 2 digit boxes (gold border) + fixed "00" suffix (gray)
+- Numpad: 2 rows of 5 buttons (1-5, 6-0), buttons enable/disable based on input state
+- Input logic: empty→1-9 enabled; after "1"→only 0 enabled (for 1000); after 2-9 or 10→all disabled
+- Action buttons: 清除 (disabled when empty) / 確定 (disabled when empty)
+- After confirming: numpad + actions fade out (`.chips-confirmed`), 開始遊戲 enables
+- `startingChips` passed to `Game.initGame()`, falls back to 1000 if not provided
+- State: `chipsDigits[]`, `chipsConfirmed`, `selectedStartingChips`
 
 ## Layout Toggle
 - Button in top-right of game screen toggles upright (default) vs edge-facing card rotation
