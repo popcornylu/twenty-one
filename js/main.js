@@ -13,6 +13,8 @@
   function playBustSound(isDealer) { hitSound.pause(); hitSound.currentTime = 0; const s = isDealer ? bustDealerSound : bustSound; s.currentTime = 0; s.play(); }
   const hitSound = new Audio('sound/hit.mp3');
   function playHitSound() { hitSound.currentTime = 0; hitSound.play(); }
+  const standSound = new Audio('sound/stand.mp3');
+  function playStandSound() { standSound.currentTime = 0; standSound.play(); }
 
   let selectedCount = 2;
   let selectedGameMode = 'betting';
@@ -521,6 +523,7 @@
             setTimeout(resolve, 800);
           }
         } else if (e.target.closest('.inline-stand-btn')) {
+          playStandSound();
           screen.removeEventListener('click', handler);
           Game.playerStand(playerIndex);
           UI.renderGameScreen();
@@ -564,6 +567,7 @@
         if (result === 'bust') playBustSound();
         if (result === 'bust' || result === 'twentyone') break;
       } else {
+        playStandSound();
         Game.playerStand(playerIndex);
         UI.renderGameScreen();
         break;
@@ -609,6 +613,7 @@
       const decision = AI.dealerDecision(score);
 
       if (decision === 'stand') {
+        playStandSound();
         dealer.status = 'standing';
         UI.renderGameScreen();
         break;
