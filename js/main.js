@@ -7,6 +7,13 @@
   const $ = sel => document.querySelector(sel);
   const $$ = sel => document.querySelectorAll(sel);
 
+  /* ---------- Sound ---------- */
+  const bustSound = new Audio('sound/bust.mp3');
+  const bustDealerSound = new Audio('sound/bust_dealer.mp3');
+  function playBustSound(isDealer) { hitSound.pause(); hitSound.currentTime = 0; const s = isDealer ? bustDealerSound : bustSound; s.currentTime = 0; s.play(); }
+  const hitSound = new Audio('sound/hit.mp3');
+  function playHitSound() { hitSound.currentTime = 0; hitSound.play(); }
+
   let selectedCount = 2;
   let selectedGameMode = 'betting';
   let selectedRounds = 5;
@@ -504,10 +511,12 @@
         if (!area) return;
 
         if (e.target.closest('.inline-hit-btn')) {
+          playHitSound();
           const result = Game.playerHit(playerIndex);
           UI.renderGameScreen();
 
           if (result === 'bust' || result === 'twentyone') {
+            if (result === 'bust') playBustSound();
             screen.removeEventListener('click', handler);
             setTimeout(resolve, 800);
           }
@@ -549,8 +558,10 @@
       }
 
       if (decision === 'hit') {
+        playHitSound();
         const result = Game.playerHit(playerIndex);
         UI.renderGameScreen();
+        if (result === 'bust') playBustSound();
         if (result === 'bust' || result === 'twentyone') break;
       } else {
         Game.playerStand(playerIndex);
@@ -605,9 +616,10 @@
 
       await waitIfPaused(); // Pause point 6: before dealer hit
       await UI.delay(1000);
+      playHitSound();
       const result = Game.playerHit(state.dealerIndex);
       UI.renderGameScreen();
-
+      if (result === 'bust') playBustSound(true);
       if (result === 'bust' || result === 'twentyone') break;
     }
 
