@@ -549,7 +549,8 @@
       const score = Game.calculateScore(player.hand);
       const decision = AI.playerDecision(player.hand, score, dealerUpCard);
 
-      // Show decision bubble
+      // Show decision bubble + play sound simultaneously
+      if (decision === 'hit') playHitSound(); else playStandSound();
       const playerArea = document.querySelector('.player-area[data-player-index="' + playerIndex + '"]');
       if (playerArea) {
         const bubble = document.createElement('div');
@@ -561,13 +562,11 @@
       }
 
       if (decision === 'hit') {
-        playHitSound();
         const result = Game.playerHit(playerIndex);
         UI.renderGameScreen();
         if (result === 'bust') playBustSound();
         if (result === 'bust' || result === 'twentyone') break;
       } else {
-        playStandSound();
         Game.playerStand(playerIndex);
         UI.renderGameScreen();
         break;
