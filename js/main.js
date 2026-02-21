@@ -589,7 +589,7 @@
         const result = Game.playerHit(playerIndex);
         UI.renderGameScreen();
         if (result === 'bust') {
-          if (!isSoloMode()) playBustSound();
+          playBustSound();
           var pos = getBustPosition(playerIndex);
           Effects.explosion(pos.x, pos.y);
         }
@@ -650,7 +650,7 @@
       const result = Game.playerHit(state.dealerIndex);
       UI.renderGameScreen();
       if (result === 'bust') {
-        if (!isSoloMode()) playBustSound(true);
+        playBustSound(true);
         var pos = getBustPosition(state.dealerIndex);
         Effects.explosion(pos.x, pos.y);
       }
@@ -675,6 +675,7 @@
       if (human.result === 'win' || human.result === 'draw') {
         successSound.currentTime = 0; successSound.play();
       } else if (human.result === 'lose') {
+        await UI.delay(1000);
         loseSound.currentTime = 0; loseSound.play();
       }
     }
