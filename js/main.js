@@ -16,6 +16,19 @@
   const standSound = new Audio('sound/stand.mp3');
   function playStandSound() { standSound.currentTime = 0; standSound.play(); }
 
+  function getBustPosition(playerIndex) {
+    var state = Game.state;
+    var el;
+    if (playerIndex === state.dealerIndex) {
+      el = document.querySelector('#dealer-area');
+    } else {
+      el = document.querySelector('[data-player-index="' + playerIndex + '"]');
+    }
+    if (!el) return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    var rect = el.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  }
+
   let selectedCount = 2;
   let selectedGameMode = 'betting';
   let selectedRounds = 5;
@@ -518,7 +531,11 @@
           UI.renderGameScreen();
 
           if (result === 'bust' || result === 'twentyone') {
-            if (result === 'bust') playBustSound();
+            if (result === 'bust') {
+              playBustSound();
+              var pos = getBustPosition(playerIndex);
+              Effects.explosion(pos.x, pos.y);
+            }
             screen.removeEventListener('click', handler);
             setTimeout(resolve, 800);
           }
@@ -564,7 +581,11 @@
       if (decision === 'hit') {
         const result = Game.playerHit(playerIndex);
         UI.renderGameScreen();
-        if (result === 'bust') playBustSound();
+        if (result === 'bust') {
+          playBustSound();
+          var pos = getBustPosition(playerIndex);
+          Effects.explosion(pos.x, pos.y);
+        }
         if (result === 'bust' || result === 'twentyone') break;
       } else {
         Game.playerStand(playerIndex);
@@ -623,7 +644,11 @@
       playHitSound();
       const result = Game.playerHit(state.dealerIndex);
       UI.renderGameScreen();
-      if (result === 'bust') playBustSound(true);
+      if (result === 'bust') {
+        playBustSound(true);
+        var pos = getBustPosition(state.dealerIndex);
+        Effects.explosion(pos.x, pos.y);
+      }
       if (result === 'bust' || result === 'twentyone') break;
     }
 

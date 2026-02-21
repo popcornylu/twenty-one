@@ -738,6 +738,12 @@ body {
   text-shadow: 0 0 8px rgba(229,57,53,0.4);
 }
 
+/* Bust cards dimmed */
+.player-area.player-bust .hand .card {
+  filter: brightness(0.4) saturate(0.3);
+  transition: filter 0.4s ease;
+}
+
 /* ---------- Status Badges ---------- */
 .status-badge {
   padding: 0.15em 0.6em;

@@ -216,6 +216,7 @@ const UI = (() => {
 
     area.classList.toggle('active-player',
       state.phase === 'dealerTurn' && state.currentPlayerIndex === state.dealerIndex);
+    area.classList.toggle('player-bust', dealer.status === 'bust');
   }
 
   function renderPlayersArea() {
@@ -250,6 +251,9 @@ const UI = (() => {
         div.classList.add('human-player-area');
       } else {
         div.classList.add('ai-player-area');
+      }
+      if (p.status === 'bust') {
+        div.classList.add('player-bust');
       }
 
       // Active player glow
