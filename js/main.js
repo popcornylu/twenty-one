@@ -15,6 +15,13 @@
   function playHitSound() { hitSound.currentTime = 0; hitSound.play(); }
   const standSound = new Audio('sound/stand.mp3');
   function playStandSound() { standSound.currentTime = 0; standSound.play(); }
+  const successSound = new Audio('sound/success2.mp3');
+  const loseSound = new Audio('sound/lose2.mp3');
+
+  function isSoloMode() {
+    var state = Game.state;
+    return state && state.humanIndices.length === 1;
+  }
 
   function getBustPosition(playerIndex) {
     var state = Game.state;
@@ -582,7 +589,7 @@
         const result = Game.playerHit(playerIndex);
         UI.renderGameScreen();
         if (result === 'bust') {
-          playBustSound();
+          if (!isSoloMode()) playBustSound();
           var pos = getBustPosition(playerIndex);
           Effects.explosion(pos.x, pos.y);
         }
@@ -633,7 +640,6 @@
       const decision = AI.dealerDecision(score);
 
       if (decision === 'stand') {
-        playStandSound();
         dealer.status = 'standing';
         UI.renderGameScreen();
         break;
@@ -641,11 +647,10 @@
 
       await waitIfPaused(); // Pause point 6: before dealer hit
       await UI.delay(1000);
-      playHitSound();
       const result = Game.playerHit(state.dealerIndex);
       UI.renderGameScreen();
       if (result === 'bust') {
-        playBustSound(true);
+        if (!isSoloMode()) playBustSound(true);
         var pos = getBustPosition(state.dealerIndex);
         Effects.explosion(pos.x, pos.y);
       }
@@ -663,6 +668,16 @@
   async function finishRound() {
     Game.calculateResults();
     UI.renderGameScreen();
+
+    // 單人模式播放結果音效
+    if (isSoloMode()) {
+      var human = Game.state.players[Game.state.humanIndices[0]];
+      if (human.result === 'win' || human.result === 'draw') {
+        successSound.currentTime = 0; successSound.play();
+      } else if (human.result === 'lose') {
+        loseSound.currentTime = 0; loseSound.play();
+      }
+    }
 
     if (Game.isGameOver()) {
       await UI.delay(2000);
