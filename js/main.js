@@ -17,6 +17,22 @@
   function playStandSound() { standSound.currentTime = 0; standSound.play(); }
   const successSound = new Audio('sound/success2.mp3');
   const loseSound = new Audio('sound/lose2.mp3');
+  const errorSound = new Audio('sound/error.mp3');
+  function playErrorSound(btn) {
+    errorSound.currentTime = 0; errorSound.play();
+    if (btn) {
+      const rect = btn.getBoundingClientRect();
+      const emoji = document.createElement('div');
+      emoji.className = 'error-emoji';
+      emoji.textContent = '\u{1F6AB}';
+      emoji.style.left = (rect.left + rect.width / 2) + 'px';
+      emoji.style.top = (rect.top + rect.height / 2) + 'px';
+      document.body.appendChild(emoji);
+      emoji.addEventListener('animationend', () => emoji.remove());
+    }
+  }
+  function setBtnDisabled(btn, val) { btn.classList.toggle('btn-disabled', val); }
+  function isBtnDisabled(btn) { return btn.classList.contains('btn-disabled'); }
 
   function isSoloMode() {
     var state = Game.state;
@@ -91,7 +107,7 @@
       }
       // After 2-9 or after '10': all disabled (input complete)
 
-      btn.disabled = !enabled;
+      setBtnDisabled(btn, !enabled);
     });
   }
 
@@ -101,8 +117,8 @@
     selectedStartingChips = 0;
     updateChipsDisplay();
     updateNumpadState();
-    $('#chips-clear-btn').disabled = true;
-    $('#chips-confirm-btn').disabled = true;
+    setBtnDisabled($('#chips-clear-btn'), true);
+    setBtnDisabled($('#chips-confirm-btn'), true);
     $('#starting-chips-section').classList.remove('chips-confirmed');
     updateStartBtnState();
   }
@@ -120,29 +136,35 @@
   function updateStartBtnState() {
     const btn = $('#start-btn');
     if (selectedGameMode === 'betting') {
-      btn.disabled = !chipsConfirmed || selectedStartingChips <= 0;
+      setBtnDisabled(btn, !chipsConfirmed || selectedStartingChips <= 0);
     } else {
-      btn.disabled = false;
+      setBtnDisabled(btn, false);
     }
   }
 
   // Numpad buttons — direct listeners (avoid delegation issues with emoji content)
   $$('#numpad .numpad-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (btn.disabled) return;
+      if (isBtnDisabled(btn)) { playErrorSound(btn); return; }
       const digit = parseInt(btn.dataset.digit);
       chipsDigits.push(digit);
       updateChipsDisplay();
       updateNumpadState();
       // Enable clear and confirm (any digit means valid amount >= 100)
-      $('#chips-clear-btn').disabled = false;
-      $('#chips-confirm-btn').disabled = false;
+      setBtnDisabled($('#chips-clear-btn'), false);
+      setBtnDisabled($('#chips-confirm-btn'), false);
     });
   });
 
   // Clear & confirm buttons
-  $('#chips-clear-btn').addEventListener('click', clearChipsInput);
-  $('#chips-confirm-btn').addEventListener('click', confirmChipsInput);
+  $('#chips-clear-btn').addEventListener('click', () => {
+    if (isBtnDisabled($('#chips-clear-btn'))) { playErrorSound($('#chips-clear-btn')); return; }
+    clearChipsInput();
+  });
+  $('#chips-confirm-btn').addEventListener('click', () => {
+    if (isBtnDisabled($('#chips-confirm-btn'))) { playErrorSound($('#chips-confirm-btn')); return; }
+    confirmChipsInput();
+  });
 
   /* ============================
      Pause System
@@ -340,7 +362,7 @@
 
   // Start game
   $('#start-btn').addEventListener('click', async () => {
-    if ($('#start-btn').disabled) return;
+    if (isBtnDisabled($('#start-btn'))) { playErrorSound($('#start-btn')); return; }
     Game.initGame({
       playerConfigs,
       gameMode: selectedGameMode,

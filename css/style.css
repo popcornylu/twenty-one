@@ -226,16 +226,16 @@ body {
   transition: all 0.15s;
 }
 
-.numpad-btn:hover:not(:disabled) {
+.numpad-btn:hover:not(:disabled):not(.btn-disabled) {
   border-color: var(--gold-dim);
   background: rgba(255, 215, 0, 0.15);
 }
 
-.numpad-btn:active:not(:disabled) {
+.numpad-btn:active:not(:disabled):not(.btn-disabled) {
   transform: scale(0.95);
 }
 
-.numpad-btn:disabled {
+.numpad-btn:disabled, .numpad-btn.btn-disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
@@ -259,21 +259,21 @@ body {
   transition: all 0.15s;
 }
 
-.chips-action-btn:hover:not(:disabled) {
+.chips-action-btn:hover:not(:disabled):not(.btn-disabled) {
   border-color: rgba(255, 255, 255, 0.5);
   background: rgba(255, 255, 255, 0.15);
 }
 
-.chips-action-btn:active:not(:disabled) {
+.chips-action-btn:active:not(:disabled):not(.btn-disabled) {
   transform: scale(0.95);
 }
 
-.chips-action-btn:disabled {
+.chips-action-btn:disabled, .chips-action-btn.btn-disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
 
-.primary-btn:disabled {
+.primary-btn:disabled, .primary-btn.btn-disabled {
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
   cursor: not-allowed;
@@ -1036,6 +1036,23 @@ body {
 @keyframes announcement-fade-out {
   from { opacity: 1; transform: scale(1); }
   to   { opacity: 0; transform: scale(1.15); }
+}
+
+/* ---------- Error Emoji ---------- */
+.error-emoji {
+  position: fixed;
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 9999;
+  animation: error-emoji-pop 0.6s ease-out forwards;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes error-emoji-pop {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.3); }
+  30%  { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  50%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -70%) scale(0.8); }
 }
 
 /* ---------- Ranking Overlay ---------- */
