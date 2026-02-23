@@ -645,7 +645,8 @@
     await waitIfPaused(); // Pause point 5: before dealer flip
     await UI.delay(600);
     playHitSound();
-    await UI.animateDealerFlip();
+    Game.state.players[Game.state.dealerIndex].hand.forEach(c => c.faceUp = true);
+    UI.renderGameScreen();
     await UI.delay(600);
 
     // Check dealer blackjack
