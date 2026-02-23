@@ -865,18 +865,48 @@ body {
   color: var(--gold);
 }
 
-.inline-chip-buttons {
+.inline-steppers {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
   justify-content: center;
   margin-bottom: 0.8rem;
-  flex-wrap: wrap;
 }
 
-.inline-chip-buttons .chip-btn {
-  width: 48px;
-  height: 48px;
-  font-size: 0.85rem;
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.stepper-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--gold);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.stepper-btn:hover {
+  background: rgba(255, 215, 0, 0.2);
+}
+
+.stepper-btn:active {
+  background: rgba(255, 215, 0, 0.35);
+}
+
+.stepper-chip {
+  width: 36px;
+  height: 36px;
+  font-size: 0.8rem;
+  pointer-events: none;
 }
 
 .inline-betting-actions {
@@ -1177,7 +1207,8 @@ body {
 
   .player-area { padding: 0.5rem 0.6rem; margin-bottom: 0; }
 
-  .inline-chip-buttons .chip-btn { width: 44px; height: 44px; font-size: 0.8rem; }
+  .stepper-btn { width: 32px; height: 32px; font-size: 1rem; }
+  .stepper-chip { width: 32px; height: 32px; font-size: 0.75rem; }
   .inline-actions .action-btn { min-width: 70px; min-height: 44px; padding: 0.5rem 1rem; font-size: 0.95rem; }
   .inline-betting-actions .primary-btn,
   .inline-betting-actions .secondary-btn { min-width: 80px; min-height: 40px; font-size: 0.85rem; }

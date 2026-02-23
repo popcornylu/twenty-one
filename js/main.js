@@ -432,17 +432,19 @@
       if (!area) return resolve();
 
       const betDisplay = area.querySelector('.inline-bet-value');
-      const chipBtns = area.querySelectorAll('.inline-chip-btn');
+      const stepperBtns = area.querySelectorAll('.stepper-btn');
       const clearBtn = area.querySelector('.inline-clear-btn');
       const confirmBtn = area.querySelector('.inline-confirm-btn');
 
-      chipBtns.forEach(btn => {
+      stepperBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-          const amount = parseInt(btn.dataset.amount);
-          if (betAmount + amount <= player.chips) {
-            betAmount += amount;
-            if (betDisplay) betDisplay.textContent = betAmount;
+          const step = parseInt(btn.dataset.step);
+          if (btn.classList.contains('stepper-plus')) {
+            betAmount = Math.min(betAmount + step, player.chips);
+          } else {
+            betAmount = Math.max(betAmount - step, 0);
           }
+          if (betDisplay) betDisplay.textContent = betAmount;
         });
       });
 

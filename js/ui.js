@@ -288,11 +288,17 @@ const UI = (() => {
         html +=
           '<div class="inline-betting">' +
             '<div class="inline-bet-display">下注: <span class="inline-bet-value">0</span></div>' +
-            '<div class="inline-chip-buttons">' +
-              '<button class="chip-btn chip-10 inline-chip-btn" data-amount="10">10</button>' +
-              '<button class="chip-btn chip-25 inline-chip-btn" data-amount="25">25</button>' +
-              '<button class="chip-btn chip-50 inline-chip-btn" data-amount="50">50</button>' +
-              '<button class="chip-btn chip-100 inline-chip-btn" data-amount="100">100</button>' +
+            '<div class="inline-steppers">' +
+              '<div class="stepper">' +
+                '<button class="stepper-btn stepper-minus" data-step="1"><</button>' +
+                '<span class="stepper-chip chip-btn chip-10">1</span>' +
+                '<button class="stepper-btn stepper-plus" data-step="1">></button>' +
+              '</div>' +
+              '<div class="stepper">' +
+                '<button class="stepper-btn stepper-minus" data-step="10"><</button>' +
+                '<span class="stepper-chip chip-btn chip-25">10</span>' +
+                '<button class="stepper-btn stepper-plus" data-step="10">></button>' +
+              '</div>' +
             '</div>' +
             '<div class="inline-betting-actions">' +
               '<button class="secondary-btn inline-clear-btn">清除</button>' +
