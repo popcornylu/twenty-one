@@ -644,6 +644,7 @@
     UI.setActivePlayer(state.dealerIndex);
     await waitIfPaused(); // Pause point 5: before dealer flip
     await UI.delay(600);
+    playHitSound();
     await UI.animateDealerFlip();
     await UI.delay(600);
 
@@ -669,6 +670,7 @@
 
       await waitIfPaused(); // Pause point 6: before dealer hit
       await UI.delay(1000);
+      playHitSound();
       const result = Game.playerHit(state.dealerIndex);
       UI.renderGameScreen();
       if (result === 'bust') {
@@ -679,7 +681,7 @@
       if (result === 'bust' || result === 'twentyone') break;
     }
 
-    await UI.delay(600);
+    await UI.delay(1000);
     await finishRound();
   }
 
@@ -689,17 +691,21 @@
 
   async function finishRound() {
     Game.calculateResults();
-    UI.renderGameScreen();
 
-    // 單人模式播放結果音效
+    // 單人模式播放結果音效（與結果同時出現）
     if (isSoloMode()) {
       var human = Game.state.players[Game.state.humanIndices[0]];
       if (human.result === 'win' || human.result === 'draw') {
+        UI.renderGameScreen();
         successSound.currentTime = 0; successSound.play();
       } else if (human.result === 'lose') {
-        await UI.delay(1000);
+        UI.renderGameScreen();
         loseSound.currentTime = 0; loseSound.play();
+      } else {
+        UI.renderGameScreen();
       }
+    } else {
+      UI.renderGameScreen();
     }
 
     if (Game.isGameOver()) {
