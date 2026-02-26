@@ -18,6 +18,8 @@
   const successSound = new Audio('sound/success2.mp3');
   const loseSound = new Audio('sound/lose2.mp3');
   const errorSound = new Audio('sound/error.mp3');
+  const blackjackSound = new Audio('sound/blackjack.mp3');
+  function playBlackjackSound() { blackjackSound.currentTime = 0; blackjackSound.play(); }
   function playErrorSound(btn) {
     errorSound.currentTime = 0; errorSound.play();
     if (btn) {
@@ -500,12 +502,14 @@
     await UI.delay(400);
 
     // Check for natural blackjacks (non-dealer)
+    let hasBlackjack = false;
     for (let i = 0; i < state.players.length; i++) {
       if (i === state.dealerIndex) continue;
       if (state.gameMode === 'betting' && state.players[i].chips <= 0) continue;
-      Game.checkNaturalBlackjack(state.players[i]);
+      if (Game.checkNaturalBlackjack(state.players[i])) hasBlackjack = true;
     }
 
+    if (hasBlackjack) playBlackjackSound();
     UI.renderGameScreen();
     await UI.delay(300);
 
@@ -654,6 +658,7 @@
     // Check dealer blackjack
     const dealer = state.players[state.dealerIndex];
     if (Game.checkNaturalBlackjack(dealer)) {
+      playBlackjackSound();
       UI.renderGameScreen();
       await UI.delay(800);
       await finishRound();
