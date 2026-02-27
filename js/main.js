@@ -20,6 +20,8 @@
   const errorSound = new Audio('sound/error.mp3');
   const blackjackSound = new Audio('sound/blackjack.mp3');
   function playBlackjackSound() { blackjackSound.currentTime = 0; blackjackSound.play(); }
+  const dealerStopSound = new Audio('sound/dealer_stop.mp3');
+  function playDealerStopSound() { dealerStopSound.currentTime = 0; dealerStopSound.play(); }
   function playErrorSound(btn) {
     errorSound.currentTime = 0; errorSound.play();
     if (btn) {
@@ -646,42 +648,45 @@
       return;
     }
 
-    // Flip dealer's hidden card
+    // 1. Flip dealer's hidden card
     UI.setActivePlayer(state.dealerIndex);
     await waitIfPaused(); // Pause point 5: before dealer flip
     await UI.delay(600);
     playHitSound();
     Game.state.players[Game.state.dealerIndex].hand.forEach(c => c.faceUp = true);
     UI.renderGameScreen();
-    await UI.delay(600);
 
     // Check dealer blackjack
     const dealer = state.players[state.dealerIndex];
     if (Game.checkNaturalBlackjack(dealer)) {
+      await UI.delay(1000); // pause between flip → blackjack
       playBlackjackSound();
       UI.renderGameScreen();
-      await UI.delay(800);
+      await UI.delay(1000); // pause between blackjack → results
       await finishRound();
       return;
     }
 
-    // Dealer auto-play
+    // 2. Dealer auto-play (hit / stand / bust)
     while (true) {
       const score = Game.calculateScore(dealer.hand);
       const decision = AI.dealerDecision(score);
 
       if (decision === 'stand') {
+        await UI.delay(1000); // pause before stand
+        playDealerStopSound();
         dealer.status = 'standing';
         UI.renderGameScreen();
         break;
       }
 
       await waitIfPaused(); // Pause point 6: before dealer hit
-      await UI.delay(1000);
+      await UI.delay(1000); // pause between actions
       playHitSound();
       const result = Game.playerHit(state.dealerIndex);
       UI.renderGameScreen();
       if (result === 'bust') {
+        await UI.delay(1000); // pause between hit → bust
         playBustSound(true);
         var pos = getBustPosition(state.dealerIndex);
         Effects.explosion(pos.x, pos.y);
@@ -689,6 +694,7 @@
       if (result === 'bust' || result === 'twentyone') break;
     }
 
+    // 3. Pause before results
     await UI.delay(1000);
     await finishRound();
   }
